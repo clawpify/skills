@@ -14,7 +14,7 @@ bunx skills add clawpify/clawpify
 
 1. Go to Shopify Admin → Settings → Apps → Develop apps
 2. Create app and configure Admin API scopes
-3. Install app and copy the Access Token
+3. Install app and copy your **Client ID** and **Client secret**
 
 ### 2. Install MCP Server
 
@@ -27,7 +27,8 @@ npm install -g clawpify
 Create `~/.clawpify/.env`:
 ```bash
 SHOPIFY_STORE_URL=your-store.myshopify.com
-SHOPIFY_ACCESS_TOKEN=shpat_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+SHOPIFY_CLIENT_ID=your-client-id
+SHOPIFY_CLIENT_SECRET=shpss_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 Add to `~/.claude/mcp.json`:
