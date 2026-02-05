@@ -5,7 +5,7 @@ Agent Skill for Shopify GraphQL Admin API. Teaches Claude how to query and manag
 ## Installation
 
 ```bash
-bunx skills add clawpify/clawpify
+bunx skills add clawpify/skills
 ```
 
 ## Setup
