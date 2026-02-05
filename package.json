@@ -1,12 +1,27 @@
 {
   "name": "clawpify",
-  "module": "index.ts",
+  "version": "1.0.0",
+  "description": "Shopify Agent SDK with AI and MCP support",
+  "main": "./src/index.ts",
   "type": "module",
-  "private": true,
-  "devDependencies": {
-    "@types/bun": "latest"
+  "bin": {
+    "clawpify": "./src/mcp-server.ts"
   },
-  "peerDependencies": {
-    "typescript": "^5"
+  "files": [
+    "src",
+    "skills"
+  ],
+  "scripts": {
+    "start": "bun run examples/server.ts"
+  },
+  "keywords": [
+    "shopify",
+    "ai",
+    "mcp"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@modelcontextprotocol/sdk": "^1.26.0"
   }
 }
