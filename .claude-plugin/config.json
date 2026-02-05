@@ -1,0 +1,13 @@
+{
+  "plugins": [
+    {
+      "id": "clawpify",
+      "name": "Clawpify",
+      "description": "Query and manage Shopify stores via GraphQL Admin API. Provides comprehensive coverage of products, orders, customers, inventory, discounts, and all Shopify operations.",
+      "skills": ["shopify"],
+      "version": "1.0.0",
+      "author": "Clawpify Team",
+      "repository": "https://github.com/clawpify/skills"
+    }
+  ]
+}
