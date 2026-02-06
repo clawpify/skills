@@ -48,7 +48,11 @@ export async function getAccessToken(
     throw new Error(`OAuth error (${response.status}): ${text}`);
   }
 
-  const data = await response.json();
+  const data = (await response.json()) as {
+    access_token: string;
+    scope: string;
+    expires_in: number;
+  };
 
   return {
     accessToken: data.access_token,

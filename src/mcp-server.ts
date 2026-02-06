@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -10,21 +10,21 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { createAuthenticatedConfig } from "./auth.js";
 import { ShopifyClient } from "./shopify.js";
-import { readdir } from "fs/promises";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
-import { homedir } from "os";
+import { readdir, readFile } from "node:fs/promises";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { homedir } from "node:os";
+import { existsSync } from "node:fs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const skillsDir = join(__dirname, "../skills/clawpify");
+const skillsDir = join(__dirname, "..", "clawpify");
 
 // Load .env from ~/.clawpify/.env if it exists (for MCP server mode)
 const configDir = join(homedir(), ".clawpify");
 const envPath = join(configDir, ".env");
 try {
-  const envFile = Bun.file(envPath);
-  if (await envFile.exists()) {
-    const envContent = await envFile.text();
+  if (existsSync(envPath)) {
+    const envContent = await readFile(envPath, "utf-8");
     for (const line of envContent.split("\n")) {
       const trimmed = line.trim();
       if (trimmed && !trimmed.startsWith("#")) {
@@ -162,7 +162,7 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   const filepath = join(skillsDir, filename);
 
   try {
-    const content = await Bun.file(filepath).text();
+    const content = await readFile(filepath, "utf-8");
     return {
       contents: [
         {

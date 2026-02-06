@@ -1,84 +1,72 @@
 # Clawpify
 
-Agent Skill for Shopify GraphQL Admin API. Teaches Claude how to query and manage Shopify stores.
+Shopify Agent SDK. Query and manage Shopify stores with AI agents and MCP.
 
-## Installation
-
-```bash
-bunx skills add clawpify/skills
-```
-
-## Setup
-
-### 1. Get Shopify Credentials
-
-1. Go to Shopify Admin → Settings → Apps → Develop apps
-2. Create app and configure Admin API scopes
-3. Install app and copy your **Client ID** and **Client secret**
-
-### 2. Install MCP Server
+## Install
 
 ```bash
-npm install -g clawpify
+npm install @clawpify/skills
 ```
 
-### 3. Configure
+## Quick Start
 
-Create `~/.clawpify/.env`:
-```bash
-SHOPIFY_STORE_URL=your-store.myshopify.com
-SHOPIFY_CLIENT_ID=your-client-id
-SHOPIFY_CLIENT_SECRET=shpss_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```ts
+import { ShopifyClient } from "@clawpify/skills";
+
+const client = new ShopifyClient({
+  storeUrl: "my-store.myshopify.com",
+  accessToken: "shpat_xxxxx",
+});
+
+const { data } = await client.graphql(`{
+  products(first: 5) {
+    nodes { id title }
+  }
+}`);
 ```
+
+## AI Agent
+
+Requires `@anthropic-ai/sdk`:
+
+```ts
+import { ShopifyClient } from "@clawpify/skills";
+import { ShopifyAgent } from "@clawpify/skills/agent";
+import { loadSkills } from "@clawpify/skills/skills";
+
+const client = new ShopifyClient({ storeUrl, accessToken });
+const agent = new ShopifyAgent({ shopify: client, skillContent: await loadSkills() });
+
+const result = await agent.chat("List my products");
+console.log(result.response);
+```
+
+## MCP Server
 
 Add to `~/.claude/mcp.json`:
+
 ```json
 {
   "mcpServers": {
     "shopify": {
       "command": "npx",
-      "args": ["clawpify"]
+      "args": ["@clawpify/skills"]
     }
   }
 }
 ```
 
-### 4. Restart Claude Code
+Create `~/.clawpify/.env`:
 
-## Usage
-
-Just ask Claude naturally:
-- "List my Shopify products"
-- "Show recent orders"
-- "Create a discount code"
-- "Check inventory levels"
+```bash
+SHOPIFY_STORE_URL=your-store.myshopify.com
+SHOPIFY_CLIENT_ID=your-client-id
+SHOPIFY_CLIENT_SECRET=shpss_xxxxx
+```
 
 ## What It Covers
 
-- Products & Variants
-- Orders & Fulfillments
-- Customers
-- Inventory & Locations
-- Discounts & Promotions
-- Collections
-- Gift Cards
-- Refunds
-- Draft Orders
-- Webhooks
-- And more (25 Shopify domains)
-
-## Safety
-
-Claude will ask permission before:
-- Creating refunds
-- Cancelling orders
-- Deleting products
-- Adjusting inventory
-- Activating discounts
-
-## Documentation
-
-See [clawpify/references/](./clawpify/references/) for detailed examples of each domain.
+Products, Orders, Customers, Inventory, Discounts, Collections, Gift Cards, Refunds, Draft Orders, Webhooks, and [more](./clawpify/references/).
 
 ## License
 
