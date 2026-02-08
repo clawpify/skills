@@ -3,7 +3,7 @@ export interface ShopifyClientConfig {
   storeUrl: string;
   /** Admin API access token */
   accessToken: string;
-  /** API version (defaults to "2026-01") */
+  /** API version (defaults to "2026-04") */
   apiVersion?: string;
 }
 
@@ -21,7 +21,7 @@ export class ShopifyClient {
   constructor(config: ShopifyClientConfig) {
     this.storeUrl = config.storeUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
     this.accessToken = config.accessToken;
-    this.apiVersion = config.apiVersion ?? "2026-01";
+    this.apiVersion = config.apiVersion ?? "2026-04";
   }
 
   /** Execute a GraphQL query or mutation against the Shopify Admin API */

@@ -46,7 +46,21 @@ export {
 } from "./auth";
 
 // AI Agent (requires @anthropic-ai/sdk peer dependency)
-export { ShopifyAgent } from "./agent";
+export { ShopifyAgent, DEFAULT_SYSTEM_INSTRUCTION } from "./agent";
+export type {
+  AgentConfig,
+  AgentHooks,
+  AgentPlugin,
+  ChatResult,
+  ModelPricing,
+  StreamEvent,
+  ThinkingConfig,
+  TokenUsage,
+} from "./agent";
+
+// Memory
+export { InMemoryStore } from "./memory";
+export type { MemoryStore } from "./memory";
 
 // Skills loader
 export { loadSkills } from "./skills";

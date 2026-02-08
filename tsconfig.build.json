@@ -9,5 +9,5 @@
     "verbatimModuleSyntax": false
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["examples", "node_modules"]
+  "exclude": ["examples", "node_modules", "src/**/*.test.ts"]
 }

@@ -1,6 +1,6 @@
 {
   "name": "@clawpify/skills",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "description": "Shopify Agent SDK — query and manage Shopify stores via GraphQL Admin API with AI agents and MCP",
   "type": "module",
   "main": "./dist/index.js",
@@ -35,6 +35,12 @@
       "bun": "./src/skills.ts",
       "import": "./dist/skills.js",
       "default": "./dist/skills.js"
+    },
+    "./memory": {
+      "types": "./dist/memory.d.ts",
+      "bun": "./src/memory.ts",
+      "import": "./dist/memory.js",
+      "default": "./dist/memory.js"
     }
   },
   "bin": {
@@ -46,11 +52,7 @@
     "clawpify"
   ],
   "scripts": {
-    "build": "bun run build:clean && bun run build:js && bun run build:bin && bun run build:types",
-    "build:clean": "rm -rf dist",
-    "build:js": "bun build ./src/index.ts ./src/agent.ts ./src/shopify.ts ./src/auth.ts ./src/skills.ts --outdir ./dist --target node --format esm --splitting --external @anthropic-ai/sdk --external @modelcontextprotocol/sdk",
-    "build:bin": "bun build ./src/mcp-server.ts --outdir ./dist --target node --format esm --external @anthropic-ai/sdk --external @modelcontextprotocol/sdk",
-    "build:types": "tsc -p tsconfig.build.json",
+    "build": "rm -rf dist && bun build ./src/index.ts ./src/agent.ts ./src/shopify.ts ./src/auth.ts ./src/skills.ts ./src/memory.ts ./src/mcp-server.ts --outdir ./dist --target node --format esm --external @anthropic-ai/sdk --external @modelcontextprotocol/sdk && tsc -p tsconfig.build.json",
     "prepublishOnly": "bun run build",
     "start": "bun run examples/server.ts"
   },

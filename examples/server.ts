@@ -1,4 +1,5 @@
 import { ShopifyAgent } from "../src/agent";
+import type { AgentHooks } from "../src/agent";
 import { ShopifyClient } from "../src/shopify";
 import { createAuthenticatedConfig } from "../src/auth";
 import { loadSkills } from "../src/skills";
@@ -11,7 +12,29 @@ const shopify = new ShopifyClient({
   storeUrl: config.storeUrl,
   accessToken: config.accessToken,
 });
-const agent = new ShopifyAgent({ shopify, skillContent });
+
+// Example lifecycle hooks for logging
+const hooks: AgentHooks = {
+  onRequest: (message) => {
+    console.log(`[agent] request: "${message.slice(0, 80)}..."`);
+  },
+  onToolCall: (toolName, input) => {
+    console.log(`[agent] tool call: ${toolName}`);
+  },
+  onToolResult: (toolName, _result, isError) => {
+    console.log(`[agent] tool result: ${toolName} (error=${isError})`);
+  },
+  onResponse: (_response, usage) => {
+    console.log(
+      `[agent] done — tokens: ${usage.inputTokens}in/${usage.outputTokens}out, cache: ${usage.cacheReadInputTokens}read/${usage.cacheCreationInputTokens}write, cost: $${usage.totalCost.toFixed(4)}`
+    );
+  },
+  onError: (error) => {
+    console.error(`[agent] error:`, error.message);
+  },
+};
+
+const agent = new ShopifyAgent({ shopify, skillContent, hooks });
 
 // Store conversation histories by session
 const sessions = new Map<string, any[]>();
@@ -63,6 +86,7 @@ Bun.serve({
           return Response.json({
             response: result.response,
             sessionId,
+            usage: result.usage,
           });
         } catch (error) {
           console.error("Chat error:", error);
