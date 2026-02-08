@@ -63,7 +63,12 @@ export { InMemoryStore } from "./memory";
 export type { MemoryStore } from "./memory";
 
 // Skills loader
-export { loadSkills } from "./skills";
+export {
+  loadSkills,
+  loadSkillMetadata,
+  loadSkillReference,
+  listSkillReferences,
+} from "./skills";
 
 // Re-export types for convenience
 export type { ShopifyClientConfig, GraphQLResponse } from "./shopify";

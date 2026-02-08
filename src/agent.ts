@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { ShopifyClient } from "./shopify";
 import type { MemoryStore } from "./memory";
+import { loadSkillReference } from "./skills";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -148,6 +149,23 @@ const SHOPIFY_GRAPHQL_TOOL: Anthropic.Tool = {
   },
 };
 
+const LOAD_SKILL_REFERENCE_TOOL: Anthropic.Tool = {
+  name: "load_skill_reference",
+  description:
+    "Load a Shopify GraphQL reference document for a specific domain. Available: products, orders, customers, inventory, discounts, collections, fulfillments, refunds, draft-orders, gift-cards, webhooks, locations, marketing, markets, menus, metafields, pages, blogs, files, shipping, shop, subscriptions, translations, segments, bulk-operations. Use this BEFORE writing GraphQL queries to get the correct syntax.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      reference: {
+        type: "string",
+        description:
+          "Name of the reference to load (e.g. 'orders', 'products', 'inventory')",
+      },
+    },
+    required: ["reference"],
+  },
+};
+
 /** Default pricing for claude-sonnet-4-5 (USD per million tokens). */
 const DEFAULT_PRICING: ModelPricing = {
   inputPerMillion: 3,
@@ -266,9 +284,9 @@ export class ShopifyAgent {
   /** Register a plugin at runtime. Throws if a tool with the same name already exists. */
   registerPlugin(plugin: AgentPlugin): void {
     const name = plugin.tool.name;
-    if (name === "shopify_graphql") {
+    if (name === "shopify_graphql" || name === "load_skill_reference") {
       throw new Error(
-        `Cannot register plugin with reserved tool name "shopify_graphql"`
+        `Cannot register plugin with reserved tool name "${name}"`
       );
     }
     if (this.plugins.has(name)) {
@@ -297,6 +315,7 @@ export class ShopifyAgent {
   private buildTools(): Anthropic.Tool[] {
     const allTools: Anthropic.Tool[] = [
       SHOPIFY_GRAPHQL_TOOL,
+      LOAD_SKILL_REFERENCE_TOOL,
       ...[...this.plugins.values()].map((p) => p.tool),
     ];
     if (allTools.length > 0) {
@@ -339,6 +358,18 @@ export class ShopifyAgent {
       try {
         const result = await this.shopify.graphql(input.query, input.variables);
         const content = JSON.stringify(result, null, 2);
+        await safeHook(this.hooks.onToolResult, name, content, false);
+        return { content, isError: false };
+      } catch (error) {
+        const content = `Error: ${error instanceof Error ? error.message : String(error)}`;
+        await safeHook(this.hooks.onToolResult, name, content, true);
+        return { content, isError: true };
+      }
+    }
+
+    if (name === "load_skill_reference") {
+      try {
+        const content = await loadSkillReference(input.reference);
         await safeHook(this.hooks.onToolResult, name, content, false);
         return { content, isError: false };
       } catch (error) {
