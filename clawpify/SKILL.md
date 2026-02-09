@@ -34,3 +34,4 @@ Load the reference for your domain using `load_skill_reference` before writing q
 **Custom data**: [metafields](reference/metafields.md)
 **Automation**: [webhooks](reference/webhooks.md) | [bulk-operations](reference/bulk-operations.md)
 **Growth**: [marketing](reference/marketing.md) | [shipping](reference/shipping.md)
+**Documents**: [docx](reference/docx.md) | [pdf](reference/pdf.md) | [pdf-forms](reference/pdf-forms.md) | [pdf-reference](reference/pdf-reference.md) | [pptx](reference/pptx.md) | [pptx-editing](reference/pptx-editing.md) | [pptx-creating](reference/pptx-creating.md) | [xlsx](reference/xlsx.md)

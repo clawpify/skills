@@ -152,14 +152,14 @@ const SHOPIFY_GRAPHQL_TOOL: Anthropic.Tool = {
 const LOAD_SKILL_REFERENCE_TOOL: Anthropic.Tool = {
   name: "load_skill_reference",
   description:
-    "Load a Shopify GraphQL reference document for a specific domain. Available: products, orders, customers, inventory, discounts, collections, fulfillments, refunds, draft-orders, gift-cards, webhooks, locations, marketing, markets, menus, metafields, pages, blogs, files, shipping, shop, subscriptions, translations, segments, bulk-operations. Use this BEFORE writing GraphQL queries to get the correct syntax.",
+    "Load a reference document for a specific domain. Available Shopify references: products, orders, customers, inventory, discounts, collections, fulfillments, refunds, draft-orders, gift-cards, webhooks, locations, marketing, markets, menus, metafields, pages, blogs, files, shipping, shop, subscriptions, translations, segments, bulk-operations. Available document references: docx, pdf, pdf-forms, pdf-reference, pptx, pptx-editing, pptx-creating, xlsx. Use this BEFORE writing queries or processing documents to get the correct syntax and workflow.",
   input_schema: {
     type: "object" as const,
     properties: {
       reference: {
         type: "string",
         description:
-          "Name of the reference to load (e.g. 'orders', 'products', 'inventory')",
+          "Name of the reference to load (e.g. 'orders', 'products', 'docx', 'pdf', 'xlsx')",
       },
     },
     required: ["reference"],
