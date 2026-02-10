@@ -49,6 +49,7 @@ export {
 export { ShopifyAgent, DEFAULT_SYSTEM_INSTRUCTION } from "./agent";
 export type {
   AgentConfig,
+  AgentContextConfig,
   AgentHooks,
   AgentPlugin,
   ChatResult,
@@ -60,7 +61,10 @@ export type {
 
 // Memory
 export { InMemoryStore } from "./memory";
-export type { MemoryStore } from "./memory";
+export type { MemoryStore, LoadResult } from "./memory";
+
+// Prompt utilities
+export { clampContent, MAX_HEARTBEAT_CHARS, MAX_MEMORY_CHARS } from "./prompt-utils";
 
 // Skills loader
 export {

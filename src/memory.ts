@@ -1,3 +1,9 @@
+/** Result of loadWithStatus() — distinguishes empty history from a storage error. */
+export interface LoadResult {
+  history: any[];
+  error: boolean;
+}
+
 /**
  * Interface for persisting conversation history across sessions.
  * Implement this interface to plug in any storage backend (Redis, SQLite, etc.).
@@ -14,6 +20,9 @@ export interface MemoryStore {
 
   /** Clear conversation history for a session. */
   clear(sessionId: string): Promise<void>;
+
+  /** Optional: load with error status for callers that need to distinguish empty from failed. */
+  loadWithStatus?(sessionId: string): Promise<LoadResult>;
 }
 
 /**
@@ -34,5 +43,9 @@ export class InMemoryStore implements MemoryStore {
 
   async clear(sessionId: string): Promise<void> {
     this.store.delete(sessionId);
+  }
+
+  async loadWithStatus(sessionId: string): Promise<LoadResult> {
+    return { history: await this.load(sessionId), error: false };
   }
 }

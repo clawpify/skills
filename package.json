@@ -1,6 +1,6 @@
 {
   "name": "@clawpify/skills",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "description": "Shopify Agent SDK — query and manage Shopify stores via GraphQL Admin API with AI agents and MCP",
   "type": "module",
   "main": "./dist/index.js",
@@ -68,9 +68,6 @@
     "model-context-protocol"
   ],
   "license": "MIT",
-  "publishConfig": {
-    "access": "public"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/clawpify/skills.git"

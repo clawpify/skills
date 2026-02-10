@@ -1,9 +1,10 @@
 import { describe, test, expect, mock } from "bun:test";
 import { ShopifyAgent, DEFAULT_SYSTEM_INSTRUCTION } from "./agent";
-import type { AgentPlugin, AgentHooks, ModelPricing } from "./agent";
+import type { AgentPlugin, AgentHooks, AgentContextConfig, ModelPricing } from "./agent";
 import { ShopifyClient } from "./shopify";
 import { InMemoryStore } from "./memory";
 import type { MemoryStore } from "./memory";
+import { clampContent, MAX_HEARTBEAT_CHARS, MAX_MEMORY_CHARS } from "./prompt-utils";
 
 // ---------------------------------------------------------------------------
 // Helpers — build realistic Anthropic response shapes
@@ -107,6 +108,7 @@ function createAgent(
     hooks?: AgentHooks;
     pricing?: ModelPricing;
     systemInstruction?: string;
+    context?: AgentContextConfig;
     thinking?: { budgetTokens: number };
     maxIterations?: number;
     memory?: MemoryStore;
@@ -923,5 +925,134 @@ describe("InMemoryStore", () => {
 
     const loaded = await store.load("test");
     expect(loaded[0].content).toBe("Original");
+  });
+
+  test("loadWithStatus returns history and error: false", async () => {
+    const store = new InMemoryStore();
+    const history = [
+      { role: "user", content: "Hello" },
+      { role: "assistant", content: "Hi!" },
+    ];
+
+    await store.save("test", history);
+    const result = await store.loadWithStatus("test");
+
+    expect(result.error).toBe(false);
+    expect(result.history).toEqual(history);
+  });
+
+  test("loadWithStatus returns empty history for unknown session", async () => {
+    const store = new InMemoryStore();
+    const result = await store.loadWithStatus("nonexistent");
+
+    expect(result).toEqual({ history: [], error: false });
+  });
+});
+
+// ==========================================================================
+// 11. clampContent & prompt constants
+// ==========================================================================
+
+describe("clampContent", () => {
+  test("returns trimmed content when under limit", () => {
+    expect(clampContent("  hello world  ", 100)).toBe("hello world");
+  });
+
+  test("truncates content that exceeds maxChars", () => {
+    const long = "a".repeat(3000);
+    const result = clampContent(long, 2000);
+    expect(result).toContain("...[truncated]");
+    // The content portion should be at most maxChars
+    expect(result.replace("\n...[truncated]", "").length).toBeLessThanOrEqual(
+      2000
+    );
+  });
+
+  test("returns exact content at the boundary", () => {
+    const exact = "b".repeat(2000);
+    expect(clampContent(exact, 2000)).toBe(exact);
+  });
+
+  test("constants have expected values", () => {
+    expect(MAX_HEARTBEAT_CHARS).toBe(2000);
+    expect(MAX_MEMORY_CHARS).toBe(4000);
+  });
+});
+
+// ==========================================================================
+// 12. AgentContextConfig
+// ==========================================================================
+
+describe("AgentContextConfig", () => {
+  test("systemInstruction as string still works (backward compat)", () => {
+    const agent = createAgent({
+      systemInstruction: "Custom instruction",
+    });
+
+    const instruction = (agent as any).systemInstruction;
+    expect(instruction).toBe("Custom instruction");
+  });
+
+  test("uses DEFAULT_SYSTEM_INSTRUCTION when neither systemInstruction nor context provided", () => {
+    const agent = createAgent();
+
+    const instruction = (agent as any).systemInstruction;
+    expect(instruction).toBe(DEFAULT_SYSTEM_INSTRUCTION);
+  });
+
+  test("assembles prompt from context when systemInstruction is not provided", () => {
+    const agent = createAgent({
+      context: {
+        heartbeatContent: "Check sales report",
+        memoryContent: "This store sells sneakers",
+      },
+    });
+
+    const instruction: string = (agent as any).systemInstruction;
+
+    // Should start with the default base
+    expect(instruction).toContain(DEFAULT_SYSTEM_INSTRUCTION);
+    // Should include heartbeat block
+    expect(instruction).toContain("NEW conversation");
+    expect(instruction).toContain("Check sales report");
+    // Should include memory block
+    expect(instruction).toContain("Things to remember");
+    expect(instruction).toContain("This store sells sneakers");
+  });
+
+  test("systemInstruction takes precedence over context", () => {
+    const agent = createAgent({
+      systemInstruction: "Override wins",
+      context: {
+        heartbeatContent: "Should not appear",
+        memoryContent: "Should not appear either",
+      },
+    });
+
+    const instruction: string = (agent as any).systemInstruction;
+    expect(instruction).toBe("Override wins");
+  });
+
+  test("context with baseInstruction overrides the default", () => {
+    const agent = createAgent({
+      context: {
+        baseInstruction: "You are a custom assistant.",
+        memoryContent: "Sells hats",
+      },
+    });
+
+    const instruction: string = (agent as any).systemInstruction;
+    expect(instruction).toContain("You are a custom assistant.");
+    expect(instruction).toContain("Sells hats");
+    expect(instruction).not.toContain(DEFAULT_SYSTEM_INSTRUCTION);
+  });
+
+  test("context with no dynamic content uses base instruction only", () => {
+    const agent = createAgent({
+      context: {},
+    });
+
+    const instruction: string = (agent as any).systemInstruction;
+    expect(instruction).toBe(DEFAULT_SYSTEM_INSTRUCTION);
   });
 });

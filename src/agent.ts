@@ -2,6 +2,11 @@ import Anthropic from "@anthropic-ai/sdk";
 import { ShopifyClient } from "./shopify";
 import type { MemoryStore } from "./memory";
 import { loadSkillReference } from "./skills";
+import {
+  clampContent,
+  MAX_HEARTBEAT_CHARS,
+  MAX_MEMORY_CHARS,
+} from "./prompt-utils";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -75,13 +80,26 @@ export interface ThinkingConfig {
   budgetTokens: number;
 }
 
+/** Structured context for prompt assembly. Used when systemInstruction is not provided. */
+export interface AgentContextConfig {
+  /** Heartbeat content (only for new sessions). Injected at prompt start. */
+  heartbeatContent?: string;
+  /** Long-term memory content. Always included. */
+  memoryContent?: string;
+  /** Base system instruction override. Falls back to DEFAULT_SYSTEM_INSTRUCTION. */
+  baseInstruction?: string;
+}
+
 /** Full configuration accepted by the ShopifyAgent constructor. */
 export interface AgentConfig {
   shopify: ShopifyClient;
   skillContent: string;
   model?: string;
-  /** Override the default system instruction sent to the model. */
+  /** Override the default system instruction sent to the model (raw string). */
   systemInstruction?: string;
+  /** Structured context assembled into a system instruction internally.
+   *  Ignored when systemInstruction is provided. */
+  context?: AgentContextConfig;
   /** Override default Claude Sonnet pricing. */
   pricing?: ModelPricing;
   /** Register plugins at construction time. */
@@ -243,6 +261,32 @@ function extractContent(response: Anthropic.Message): {
   return { text, thinking };
 }
 
+/** Assemble a system instruction from structured AgentContextConfig. */
+function buildSystemInstruction(ctx: AgentContextConfig): string {
+  const base = ctx.baseInstruction ?? DEFAULT_SYSTEM_INSTRUCTION;
+
+  let heartbeatBlock = "";
+  if (ctx.heartbeatContent?.trim()) {
+    heartbeatBlock =
+      "\n\nThis is a NEW conversation (no recent chat history). " +
+      "Follow these instructions first, then respond to the merchant's message. " +
+      "Keep the summary brief (1-2 sentences), then address what they asked.\n\n---\n" +
+      clampContent(ctx.heartbeatContent, MAX_HEARTBEAT_CHARS) +
+      "\n---";
+  }
+
+  let memoryBlock = "";
+  if (ctx.memoryContent?.trim()) {
+    memoryBlock =
+      "\n\nThings to remember about this merchant/store " +
+      "(use this context in your responses):\n---\n" +
+      clampContent(ctx.memoryContent, MAX_MEMORY_CHARS) +
+      "\n---";
+  }
+
+  return base + heartbeatBlock + memoryBlock;
+}
+
 // ---------------------------------------------------------------------------
 // Agent
 // ---------------------------------------------------------------------------
@@ -264,8 +308,15 @@ export class ShopifyAgent {
     this.anthropic = new Anthropic();
     this.shopify = config.shopify;
     this.skillContent = config.skillContent;
-    this.systemInstruction =
-      config.systemInstruction ?? DEFAULT_SYSTEM_INSTRUCTION;
+
+    if (config.systemInstruction != null) {
+      this.systemInstruction = config.systemInstruction;
+    } else if (config.context) {
+      this.systemInstruction = buildSystemInstruction(config.context);
+    } else {
+      this.systemInstruction = DEFAULT_SYSTEM_INSTRUCTION;
+    }
+
     this.model = config.model ?? "claude-sonnet-4-5";
     this.pricing = config.pricing ?? DEFAULT_PRICING;
     this.hooks = config.hooks ?? {};
